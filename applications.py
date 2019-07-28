@@ -14,7 +14,7 @@ from keras.applications.nasnet import NASNetMobile
 source_module = {
                  InceptionV3:       keras.applications.inception_v3,
                  DenseNet201:       keras.applications.densenet,
-                 ResNet50:          keras.applications.resnet50,                                  
+                 ResNet50:          keras.applications.resnet50,       
                  InceptionResNetV2: keras.applications.inception_resnet_v2,
                  VGG16:             keras.applications.vgg16,
                  NASNetMobile:      keras.applications.nasnet
@@ -26,10 +26,10 @@ from model_helper import *
 process_input = {
                  InceptionV3:       keras.applications.inception_v3.preprocess_input,
                  DenseNet201:       keras.applications.densenet.preprocess_input,
-                 ResNet50:          keras.applications.resnet50.preprocess_input,                                  
+                 ResNet50:          keras.applications.resnet50.preprocess_input,
                  InceptionResNetV2: keras.applications.inception_resnet_v2.preprocess_input,
                  VGG16:             keras.applications.vgg16.preprocess_input,
-                 NASNetMobile:      keras.applications.nasnet.preprocess_input,
+                 NASNetMobile:      keras.applications.nasnet.preprocess_input
                 }
 
 def fc_layers(input_layer,
@@ -119,27 +119,8 @@ def conv2d_bn(x, filters, num_row, num_col, padding='same',
     x = Activation('relu', name=name)(x)
     return x
 
-def get_inception_gaps(model, name='', indexes=range(11)):
-    """
-    Utility function that returns GlobalAveragePooled features from
-    layers 'mixed%d' % i, i in indexes, concatenated.
-    Basically does the multi-GAP extraction.
-
-    :param model: model object
-    :param name: prefix for the GAP and concat layer names
-    :param indexes: layers indices to extract
-    :return: Keras layer
-    """
-    if name: name += '_'
-    feature_layers = [model.get_layer('mixed%d' % i) 
-                      for i in indexes]
-    gaps = [GlobalAveragePooling2D(name=name+"gap%d" % i)(l.output)
-            for i, l in zip(indexes, feature_layers)]
-    concat_gaps = Concatenate(name=(name+'concat_gaps'))(gaps)
-    return concat_gaps
-
 def model_inception_multigap(input_shape=(224, 224, 3), return_sizes=False,
-                             indexes=range(11), name = None):
+                             indexes=range(11), name = ''):
     """
     Build InceptionV3 multi-GAP model, that extracts narrow MLSP features.
     Relies on `get_inception_gaps`.
@@ -156,10 +137,18 @@ def model_inception_multigap(input_shape=(224, 224, 3), return_sizes=False,
                              include_top = False, 
                              input_shape = input_shape)
     print 'Creating multi-GAP model'
-    model = Model(inputs  = model_base.input, 
-                  outputs = get_inception_gaps(model_base, 
-                                               indexes=indexes))
-    if name is not None:
+    
+    gap_name = name + '_' if name else ''
+
+    feature_layers = [model_base.get_layer('mixed%d' % i) 
+                      for i in indexes]
+    gaps = [GlobalAveragePooling2D(name=gap_name+"gap%d" % i)(l.output)
+            for i, l in zip(indexes, feature_layers)]
+    concat_gaps = Concatenate(name=gap_name+'concat_gaps')(gaps)
+
+    model = Model(inputs  = model_base.input,
+                  outputs = concat_gaps)
+    if name:
         model.name = name
     
     if return_sizes:
@@ -183,7 +172,8 @@ def model_inceptionresnet_multigap(input_shape=(224, 224, 3),
     model_base = InceptionResNetV2(weights='imagenet',
                                    include_top=False,
                                    input_shape=input_shape)
-
+    print 'Creating multi-GAP model'
+    
     feature_layers = [l for l in model_base.layers if 'mixed' in l.name]
     gaps = [GlobalAveragePooling2D(name="gap%d" % i)(l.output)
             for i, l in enumerate(feature_layers)]
@@ -214,7 +204,8 @@ def model_inception_pooled(input_shape=(None, None, 3), indexes=range(11),
     model_base = InceptionV3(weights     = 'imagenet', 
                              include_top = False, 
                              input_shape = input_shape)
-
+    print 'Creating multi-pooled model'
+    
     ImageResizer = Lambda(lambda x: K.tf.image.resize_area(x, pool_size),
                           name='feature_resizer')
 
@@ -248,7 +239,8 @@ def model_inceptionresnet_pooled(input_shape=(None, None, 3), pool_size=(5, 5),
     model_base = InceptionResNetV2(weights     = 'imagenet', 
                                    include_top = False, 
                                    input_shape = input_shape)
-
+    print 'Creating multi-pooled model'
+    
     ImageResizer = Lambda(lambda x: K.tf.image.resize_area(x, pool_size),
                           name='feature_resizer') 
 
