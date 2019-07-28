@@ -242,14 +242,13 @@ class ModelHelper:
                    
         print '\nTraining model:', self.model_name()
         
-        if not train_gen:
+        if train_gen is None:
             train_gen = self.make_generator(ids[ids.set == 'training'])
-        if not valid_gen:
+        if valid_gen is None:
             valid_gen = self.make_generator(ids[ids.set == 'validation'],
                                             deterministic=True)
 
-        if lr:
-            self.params.lr = lr
+        if lr: self.params.lr = lr
         self.params.optimizer = update_config(self.params.optimizer,
                                               lr=self.params.lr)
         
@@ -264,6 +263,7 @@ class ModelHelper:
             print '\nMain parameters:'
             print '----------------'
             pretty(self.params)
+            print '\nLearning'
 
         history = self.model.fit_generator(train_gen, epochs = epochs,
                                            steps_per_epoch   = len(train_gen),
@@ -271,7 +271,7 @@ class ModelHelper:
                                            validation_steps  = len(valid_gen),
                                            workers           = params.workers, 
                                            callbacks         = self._callbacks(),
-                                           max_queue_size    = params.max_queue_size,                                                                                       
+                                           max_queue_size    = params.max_queue_size,
                                            class_weight      = self.params.class_weights,
                                            use_multiprocessing = params.multiproc)
         return history
@@ -452,7 +452,7 @@ class ModelHelper:
             print 'File:', file_path
 
         data_gen = self.make_generator(ids, **params)
-                
+
         for group_name in groups_list:
             activ = self.predict(data_gen, 
                                  output_layer=output_layer).\
