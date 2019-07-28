@@ -30,6 +30,12 @@ def GPUMemoryCap(fraction=1):
 
 # Metrics and losses
     
+def plcc_tf(x, y):
+    """PLCC metric"""
+    xc = x - K.mean(x)
+    yc = y - K.mean(y)
+    return K.mean(xc*yc) / (K.std(x)*K.std(y) + K.epsilon())
+
 def earth_mover_loss(y_true, y_pred):
     """
     Earth Mover's Distance loss.
