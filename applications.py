@@ -119,6 +119,31 @@ def conv2d_bn(x, filters, num_row, num_col, padding='same',
     x = Activation('relu', name=name)(x)
     return x
 
+def inception_block(x, size=768, name=''):
+    channel_axis = 3
+    
+    branch1x1 = conv2d_bn(x, size, 1, 1, name=name+'branch_1x1')
+
+    branch3x3 = conv2d_bn(x, size, 1, 1, name=name+'3x3_1x1')
+    branch3x3_1 = conv2d_bn(branch3x3, size/2, 1, 3, name=name+'3x3_1x3')
+    branch3x3_2 = conv2d_bn(branch3x3, size/2, 3, 1, name=name+'3x3_3x1')
+    branch3x3 = concatenate(
+        [branch3x3_1, branch3x3_2],
+        axis=channel_axis,
+        name=name+'branch_3x3')
+
+    branch_pool = AveragePooling2D((3, 3), strides=(1, 1), 
+                                   padding='same', 
+                                   name=name+'avg_pool_2d')(x)
+    branch_pool = conv2d_bn(branch_pool, size, 1, 1, 
+                            name=name+'branch_pool')
+    
+    y = concatenate(
+        [branch1x1, branch3x3, branch_pool],
+        axis=channel_axis,
+        name=name+'mixed_final')
+    return y
+
 def model_inception_multigap(input_shape=(224, 224, 3), return_sizes=False,
                              indexes=range(11), name = ''):
     """
