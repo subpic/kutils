@@ -461,9 +461,9 @@ class ModelHelper:
                           over_write = over_write, 
                           verbose    = verbose) as h:
                 if groups == 1:
-                    h.write_data(activ, ids.image_name)
+                    h.write_data(activ, ids[data_gen.inputs[0]])
                 else:
-                    h.write_data([activ], ids.image_name, 
+                    h.write_data([activ], ids[data_gen.inputs[0]], 
                                  group_names=[group_name])
             del activ
 

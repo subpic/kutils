@@ -77,11 +77,14 @@ class DataGeneratorDisk(keras.utils.Sequence):
 
         # return values from `outputs` columns
         outputs = self.outputs
-        if (isinstance(outputs, (list, tuple)) and
-            isinstance(outputs[0], (list, tuple))):
-            y = [np.array(ids_batch.loc[:,o]) for o in outputs]
+        if outputs is not None:
+            if (isinstance(outputs, (list, tuple)) and
+                isinstance(outputs[0], (list, tuple))):
+                y = [np.array(ids_batch.loc[:,o]) for o in outputs]
+            else:
+                y = np.array(ids_batch.loc[:,outputs])
         else:
-            y = np.array(ids_batch.loc[:,outputs])
+            y = None
 
         # build array from reading images in `inputs` columns
         X_list = []
