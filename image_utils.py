@@ -215,6 +215,37 @@ def resize_folder(path_src, path_dst, image_size_dst=None,
             
     return errors
 
+def check_images(image_dir, image_types =\
+                    ('*.jpg', '*.png', '*.bmp', '*.JPG', '*.BMP', '*.PNG')):
+    """
+    Check which images from `image_dir` fail to read.
+
+    :param image_dir: the image directory
+    :param image_types: match patterns for image file extensions, defaults:
+                        ('*.jpg', '*.png', '*.bmp', '*.JPG', '*.BMP', '*.PNG')
+    :return: tuple of (list of failed image names, list of all image names)
+    """    
+    # index all `image_types` in source path
+    file_list = []
+    for imtype in image_types:
+        pattern = os.path.join(image_dir, imtype)
+        file_list.extend(glob.glob(pattern))
+    print 'Found', len(file_list), 'images'
+        
+    image_names_err = []
+    image_names_all = []
+    for (i, file_path) in enumerate(file_list):
+        if i % (len(file_list)/20) == 0: print i,
+        elif i % (len(file_list)/1000) == 0: print '.',
+
+        try:            
+            file_dir, file_name = os.path.split(file_path)
+            file_body, file_ext = os.path.splitext(file_name)
+            image_names_all.append(file_name)
+            load_img(file_path) # try to load
+        except:
+            image_names_err.append(file_name)            
+    return (image_names_err, image_names_all)
 
 def save_images_to_h5(image_path, h5_path, over_write=False,
                       batch_size=32, image_size_dst=None):
