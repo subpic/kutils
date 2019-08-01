@@ -454,9 +454,10 @@ class ModelHelper:
         data_gen = self.make_generator(ids, **params)
 
         for group_name in groups_list:
-            activ = self.predict(data_gen, 
-                                 output_layer=output_layer).\
-                                astype(save_as_type)
+            activ = self.predict(data_gen, output_layer = output_layer).\
+                                                          astype(save_as_type)
+            if len(activ.shape)==1:
+                activ = np.expand_dims(activ, 0)
             with H5Helper(file_path, 
                           over_write = over_write, 
                           verbose    = verbose) as h:
