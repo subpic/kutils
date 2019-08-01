@@ -13,10 +13,11 @@ from generic import *
 def view_stack(ims, figsize=(20, 20), figshape=None, 
                cmap='gray', vrange='all', **kwargs):
     """
-    Display a stack of images, using subplots
+    Display a stack or list of images using subplots.
 
-    :param ims: single or list of np.ndarray
-                if list, np.stack is called first
+    :param ims: single np.ndarray of size [N x H x W x 3/1] or 
+                list of np.ndarray(s) of size [H x W x 3/1]
+                (if list, np.stack is called first)
     :param figsize: plt.figure(figsize=figsize)
     :param figshape: (rows, cols) of the figure
                      if None, the sizes are inferred
@@ -27,10 +28,11 @@ def view_stack(ims, figsize=(20, 20), figshape=None,
     :param kwargs: passed to `imshow` for each image
     """
     if isinstance(ims, list):
-        ims = np.stack(ims, -1)
+        ims = np.stack(ims, 0)        
     if len(ims.shape) < 3:
-        ims = np.expand_dims(ims, -1)
-    n = ims.shape[-1]
+        ims = np.expand_dims(ims, 0)
+        
+    n = ims.shape[0] # number of images
     if figshape is None:
         rows = int(np.ceil(np.sqrt(n)))
         cols = int(np.ceil(1.*n/rows))
@@ -44,7 +46,7 @@ def view_stack(ims, figsize=(20, 20), figshape=None,
     fig = plt.figure(figsize=figsize)
     for i in range(n):
         ax = fig.add_subplot(rows, cols, i+1)
-        ax.imshow(np.squeeze(ims[..., i]), cmap=cmap,
+        ax.imshow(np.squeeze(ims[i, ...]), cmap=cmap,
                   vmin=vrange[0], vmax=vrange[1], **kwargs)
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
