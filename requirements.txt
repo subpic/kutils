@@ -6,6 +6,6 @@ pandas==0.23.3
 munch==2.3.2
 h5py==2.8.0
 Keras==2.1.6
-Pillow==6.1.0
+Pillow==6.2.0
 skimage==0.0
 scikit_learn==0.21.3
